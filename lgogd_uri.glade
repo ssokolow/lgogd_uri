@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <requires lib="gtk+" version="2.24"/>
+  <!-- interface-naming-policy project-wide -->
+  <object class="GtkImage" id="img_linux">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">linux.png</property>
+  </object>
+  <object class="GtkImage" id="img_mac">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">mac.png</property>
+  </object>
+  <object class="GtkImage" id="img_windows">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="pixbuf">windows.png</property>
+  </object>
+  <object class="GtkWindow" id="mainwin">
+    <property name="can_focus">False</property>
+    <property name="title" translatable="yes">GOG Downloader</property>
+    <signal name="delete-event" handler="gtk_main_quit" swapped="no"/>
+    <child>
+      <object class="GtkVBox" id="vbox">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkTreeView" id="view_dlqueue">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="model">store_dlqueue</property>
+            <signal name="button-press-event" handler="on_view_dlqueue_button_press_event" swapped="no"/>
+            <signal name="key-press-event" handler="on_view_dlqueue_key_press_event" swapped="no"/>
+            <signal name="popup-menu" handler="on_view_dlqueue_button_press_event" swapped="no"/>
+            <child>
+              <object class="GtkTreeViewColumn" id="col_game">
+                <property name="resizable">True</property>
+                <property name="title" translatable="yes">Game</property>
+                <property name="expand">True</property>
+                <child>
+                  <object class="GtkCellRendererText" id="cell_game"/>
+                  <attributes>
+                    <attribute name="text">0</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="col_windows">
+                <property name="title" translatable="yes">windows</property>
+                <property name="widget">img_windows</property>
+                <child>
+                  <object class="GtkCellRendererToggle" id="cell_windows">
+                    <signal name="toggled" handler="on_cell_toggled" swapped="no"/>
+                  </object>
+                  <attributes>
+                    <attribute name="active">2</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="col_linux">
+                <property name="title" translatable="yes">linux</property>
+                <property name="widget">img_linux</property>
+                <child>
+                  <object class="GtkCellRendererToggle" id="cell_linux">
+                    <signal name="toggled" handler="on_cell_toggled" swapped="no"/>
+                  </object>
+                  <attributes>
+                    <attribute name="active">3</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="col_mac">
+                <property name="title" translatable="yes">linux</property>
+                <property name="widget">img_mac</property>
+                <child>
+                  <object class="GtkCellRendererToggle" id="cell_mac">
+                    <signal name="toggled" handler="on_cell_toggled" swapped="no"/>
+                  </object>
+                  <attributes>
+                    <attribute name="active">4</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkFileChooserButton" id="btn_target">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="action">select-folder</property>
+            <property name="title" translatable="yes">Select Target Folder</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="btn_go">
+            <property name="label">gtk-save</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="use_action_appearance">False</property>
+            <property name="use_stock">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkMenu" id="popup_dlqueue">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkMenuItem" id="dlqueue_delete">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="use_action_appearance">False</property>
+        <property name="label" translatable="yes">Remove</property>
+        <property name="use_underline">True</property>
+        <signal name="activate" handler="on_dlqueue_delete_activate" swapped="no"/>
+      </object>
+    </child>
+  </object>
+  <object class="GtkListStore" id="store_dlqueue">
+    <columns>
+      <!-- column-name Game -->
+      <column type="gchararray"/>
+      <!-- column-name File -->
+      <column type="gchararray"/>
+      <!-- column-name Windows -->
+      <column type="gboolean"/>
+      <!-- column-name Linux -->
+      <column type="gboolean"/>
+      <!-- column-name Mac -->
+      <column type="gboolean"/>
+    </columns>
+  </object>
+</interface>
