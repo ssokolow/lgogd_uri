@@ -267,8 +267,7 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
             # Do this as early as possible to minimize the chance that
             # an exception caught by gtkexcepthook.py will leave btn_go grayed
             self.builder.get_object('btn_go').set_sensitive(True)
-            self.term.feed("\r\n** Done. (Queue emptied)")
-            self.notification.show()
+            self.term.feed("\r\n** Done. (Queue emptied) **")
             return
 
         no_subdirs = self.lgd_conf.get('no-subdirectories', False)
