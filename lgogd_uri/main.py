@@ -38,6 +38,7 @@ __license__ = "MIT"
 
 SVC_NAME = "com.ssokolow.lgogd_uri"
 LGOGD_CFG_PATH = "~/.config/lgogdownloader/config.cfg"
+GOGD_URI_CFG_PATH = "~/.config/lgogd_uri"
 PLAT_WIN = 1
 PLAT_MAC = 2
 PLAT_LIN = 4
@@ -156,6 +157,8 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         self.lgd_conf = None
         self.notification = None
         self.term = None
+        self.save_dir_store = os.path.expanduser(
+            os.path.join(GOGD_URI_CFG_PATH, 'save_dir'))
 
     def _init_gui(self):
         """Parts of __init__ that should only run in the single instance."""
@@ -170,13 +173,23 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
             self.notification = notify.Notification("GOG Downloads Complete",
                                                     icon='document-save')
 
+        try:
+            parent = os.path.dirname(self.save_dir_store)
+            if not os.path.exists(parent):
+                os.makedirs(parent)
+        except OSError, err:
+            log.error("Cannot prepare to remember target directory: %s", err)
+
         # Set the default target directory to the user's Downloads folder
-        # TODO: Save customized values
         try:
             tgt_path = subprocess.check_output(
                 ["xdg-user-dir", "DOWNLOAD"]).strip()
         except (OSError, subprocess.CalledProcessError):
             tgt_path = os.path.expanduser("~")
+        # Remember the user's customized choice
+        if os.path.exists(self.save_dir_store):
+            with open(self.save_dir_store, 'r') as fobj:
+                tgt_path = fobj.read().strip()
         self.builder.get_object('btn_target').set_filename(tgt_path)
 
         # FIXME: Figure out how to preserve multi-select during drag-start
@@ -303,6 +316,13 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         # Do this as late as possible to minimize the chance that an exception
         # could leave it un-sensitive
         widget.set_sensitive(False)
+
+    def on_btn_target_file_set(self, widget):
+        try:
+            with open(self.save_dir_store, 'w') as fobj:
+                fobj.write(widget.get_filename())
+        except IOError, err:
+            log.error("Cannot save target directory: %s", err)
 
     def on_cell_toggled(self, cellrenderer, path):
         """Handler for enabling clicks on checkbox cells."""
