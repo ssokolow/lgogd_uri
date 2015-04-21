@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Type=Application
+Name=lgogd_url.py
+GenericName=GOG Downloader GUI
+Comment=A simple frontend to allow lgogdownloader to handle gogdownloader:// URIs
+TryExec=lgogd_uri.py
+Exec=lgogd_uri.py %U
+Terminal=false
+MimeType=x-scheme-handler/gogdownloader
+Categories=Utility;GTK
