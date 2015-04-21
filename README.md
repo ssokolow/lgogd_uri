@@ -1,5 +1,6 @@
 A simple GTK+ frontend for [LGOGDownloader](https://github.com/Sude-/lgogdownloader)
-to enable support for the convenient `gogdownloader://` URIs GOG.com offers.
+to enable support for the convenient `gogdownloader://` URIs that
+[GOG.com](http://www.gog.com/) offers.
 
 ## Features
 
@@ -38,6 +39,8 @@ save-serials = true
 
 * Add, reorder, and delete remaining queue entries while a download is in
   progress. (Including changing the target directory for future downloads)
+
+  ![tabs screenshot](img/sshot_tabs.png)
 
 ## Installation
 
@@ -87,7 +90,8 @@ If your browser still doesn't want to handle `gogdownloader://` links...
   reordering and context-menu support. (Use the Delete key for batch deletion)
 * Currently, no attempt is made to retrieve game metadata, so the "Game" and
   "File ID" columns don't give the nice, pretty output the official GOG
-  downloader offers.
+  downloader offers and the platform checkboxes will always start out set
+  to the value of `platform` in your `config.cfg`.
 * No attempt is currently made to deduplicate the queue, relying instead on
   LGOGDownloader to not redownload files which already exist.
 
