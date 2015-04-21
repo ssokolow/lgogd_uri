@@ -313,7 +313,7 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         """Handler to start next download when lgogdownloader exits."""
         if widget.get_child_exit_status() != 0:
             # TODO: Redesign the queue so this can be indicated by icons
-            widget.feed("-- DOWNLOAD FAILED --")
+            widget.feed("\r\n-- DOWNLOAD FAILED --")
         self.next_download()
 
     def on_view_dlqueue_key_press_event(self, widget, event):
