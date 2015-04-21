@@ -148,7 +148,7 @@ class Application(dbus.service.Object):
             for game_id, file_id in parse_uri(arg):
                 is_installer = 'installer' in file_id
                 is_extra = not is_installer  # For Glade compatibility
-                self.data.append((
+                iter_last = self.data.append((
                     game_id,
                     file_id,
                     is_installer,
@@ -156,6 +156,8 @@ class Application(dbus.service.Object):
                     platforms & PLAT_LIN,
                     platforms & PLAT_MAC,
                     is_extra))
+        path_last = self.data.get_path(iter_last)
+        self.builder.get_object('view_dlqueue').scroll_to_cell(path_last)
 
     def gtk_main_quit(self, widget, event):
         """Helper for Builder.connect_signals"""
