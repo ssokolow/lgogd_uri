@@ -35,6 +35,7 @@ __version__ = "0.0pre0"
 __license__ = "MIT"
 
 SVC_NAME = "com.ssokolow.lgogd_uri"
+LGOGD_CFG_PATH = "~/.config/lgogdownloader/config.cfg"
 PLAT_WIN = 1
 PLAT_MAC = 2
 PLAT_LIN = 4
@@ -47,27 +48,34 @@ import logging, os, subprocess, sys, time
 from xml.etree import cElementTree as ET  # NOQA
 log = logging.getLogger(__name__)
 
+# Resolve the path to bundled icons only once
 RES_DIR = os.path.dirname(os.path.realpath(__file__))
+
+# ---=== Begin Imports ===---
 
 try:
     import pygtk
     pygtk.require("2.0")
 except ImportError:
-    pass
-
-try:
-    import dbus, dbus.bus, dbus.service, dbus.mainloop.glib
-except ImportError:
-    sys.stderr.write("Missing dbus-python! Exiting.\n")
+    pass  # Apparently some PyGTK installs are missing this but still work
 
 try:
     import gtk, gtk.gdk  # pylint: disable=import-error
 except ImportError:
     sys.stderr.write("Missing PyGTK! Exiting.\n")
+    sys.exit(1)
 
+# Present tracebacks as non-fatal errors in the GUI for more user-friendliness
+# TODO: In concert with this, I'll probably want some kind of failsafe
+#       for re-enabling the Save button if necessary.
 import gtkexcepthook
 gtkexcepthook.enable()
 
+try:
+    import dbus, dbus.bus, dbus.service, dbus.mainloop.glib
+except ImportError:
+    sys.stderr.write("Missing dbus-python! Exiting.\n")
+    sys.exit(1)
 try:
     import vte
 except ImportError:
@@ -76,24 +84,35 @@ except ImportError:
                       "Missing python-vte! Exiting.")
     sys.exit(1)
 
+# ---=== Begin Functions ===---
+
 def get_lgogd_conf():
     """Read and parse lgogdownloader's config file."""
     results = {}
-    # pylint: disable=invalid-name
-    with open(os.path.expanduser("~/.config/lgogdownloader/config.cfg")) as fh:
-        for line in fh:
-            x, y = [i.strip() for i in line.strip().split('=', 1)]
-            if y.lower() == 'true':
-                y = True
-            elif y.lower() == 'false':
-                y = False
+    path = os.path.expanduser(LGOGD_CFG_PATH)
+    if not os.path.exists(path):
+        log.error("Cannot find LGOGDownloader config file at %s. "
+                  "Falling back to internal defaults.", path)
+        return results
+
+    with open(os.path.expanduser(LGOGD_CFG_PATH)) as fobj:
+        for line in fobj:
+            try:
+                key, val = [i.strip() for i in line.strip().split('=', 1)]
+            except ValueError:
+                continue  # Fail safely if a line doesn't contain =
+
+            if val.lower() == 'true':
+                val = True
+            elif val.lower() == 'false':
+                key = False
             else:
                 try:
-                    y = int(y)
+                    val = int(val)
                 except ValueError:
                     pass
 
-            results[x] = y
+            results[key] = val
     return results
 
 def parse_uri(uri):
@@ -111,12 +130,14 @@ def parse_uri(uri):
         results.append(tuple(filepath.split('/', 1)))
     return results
 
+# ---=== Begin Application Class ===---
+
 class Application(dbus.service.Object):  # pylint: disable=missing-docstring
     def __init__(self, bus, path, name):
         dbus.service.Object.__init__(self, bus, path, name)
         self.running = False
 
-        # Shut up PyLint
+        # Shut up PyLint about defining members in _init_gui
         self.builder = gtk.Builder()
         self.data = None
         self.toggle_map = {}
@@ -126,20 +147,25 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
     def _init_gui(self):
         """Parts of __init__ that should only run in the single instance."""
         self.gtkbuilder_load('lgogd_uri.glade')
+        self.data = self.builder.get_object('store_dlqueue')
 
         # Load the lgogdownloader settings
         self.lgd_conf = get_lgogd_conf()
 
+        # Set the default target directory to the user's Downloads folder
         # TODO: Save customized values
-        tgt_path = subprocess.check_output(
-            ["xdg-user-dir", "DOWNLOAD"]).strip()
+        try:
+            tgt_path = subprocess.check_output(
+                ["xdg-user-dir", "DOWNLOAD"]).strip()
+        except (OSError, subprocess.CalledProcessError):
+            tgt_path = os.path.expanduser("~")
         self.builder.get_object('btn_target').set_filename(tgt_path)
 
-        tview = self.builder.get_object("view_dlqueue")
-        tview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+        # FIXME: Figure out how to preserve multi-select during drag-start
+        #tview = self.builder.get_object("view_dlqueue")
+        #tview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 
-        # VTE widgets aren't offered by Glade
-        self.data = self.builder.get_object('store_dlqueue')
+        # VTE widgets aren't offered by Glade. Add and config at runtime.
         self.term = vte.Terminal()
         self.term.connect("child-exited", self.on_child_exited)
         self.builder.get_object("vbox_term").add(self.term)
@@ -153,7 +179,10 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         """
         path = os.path.join(RES_DIR, path)
         self.builder.add_from_file(os.path.join(RES_DIR, path))
+        self.builder.connect_signals(self)
 
+        # Retrieve the view-store mappings from the raw GTK Builder XML
+        # because PyGTK lacks an API for retrieving them from the widgets.
         columns = ET.parse(path).findall(".//*[@class='GtkTreeViewColumn']")
         for column in columns:
             renderer = column.find(".//*[@class='GtkCellRendererToggle']")
@@ -164,8 +193,6 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
                 idx = column.find(".//attributes/attribute[@name='active']")
                 if idx is not None:
                     self.toggle_map[obj] = int(idx.text)
-
-        self.builder.connect_signals(self)
 
     @dbus.service.method(SVC_NAME, in_signature='', out_signature='b')
     def is_running(self):
@@ -179,7 +206,7 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         for arg in arguments:
             for game_id, file_id in parse_uri(arg):
                 is_installer = 'installer' in file_id
-                is_extra = not is_installer  # For Glade compatibility
+                is_extra = not is_installer  # Used by cell visibility binding
                 iter_last = self.data.append((
                     game_id,
                     file_id,
@@ -188,6 +215,9 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
                     platforms & PLAT_LIN,
                     platforms & PLAT_MAC,
                     is_extra))
+
+        # Ensure that all added entries are made visible unless the window
+        # isn't tall enough.
         path_last = self.data.get_path(iter_last)
         self.builder.get_object('view_dlqueue').scroll_to_cell(path_last)
 
@@ -197,57 +227,61 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
 
     def next_download(self):
         """Common code for the Save button and lgogdownloader exit handler"""
+        queue_iter = self.data.get_iter_first()
+        if not queue_iter:
+            # Do this as early as possible to minimize the chance that
+            # an exception caught by gtkexcepthook.py will leave btn_go grayed
+            self.builder.get_object('btn_go').set_sensitive(True)
+            self.term.feed("\r\n** Done. (Queue emptied)")
+            return
+
         no_subdirs = self.lgd_conf.get('no-subdirectories', False)
         subdir_game = self.lgd_conf.get('subdir-game', SUBDIR_GAME)
         subdir_extras = self.lgd_conf.get('subdir-extras', SUBDIR_EXTRAS)
 
-        queue_iter = self.data.get_iter_first()
-        if queue_iter:
-            # TODO: Rather than popping it off the store, use a status column
-            (game_id, file_id, is_inst, win, lin, mac
-             ) = self.data.get(queue_iter, 0, 1, 2, 3, 4, 5)
-            self.data.remove(queue_iter)
+        # TODO: Rather than popping it off the store, use a status column
+        #       so that users can easily see and retry failed downloads.
+        (game_id, file_id, is_inst, win, lin, mac
+         ) = self.data.get(queue_iter, 0, 1, 2, 3, 4, 5)
+        self.data.remove(queue_iter)
 
-            # Limited support for --subdir-game and --subdir-extras
-            subdir_game = subdir_game.replace('%gamename%', game_id)
-            subdir_extras = subdir_extras.replace('%gamename%', game_id)
+        # Limited support for --subdir-game and --subdir-extras
+        subdir_game = subdir_game.replace('%gamename%', game_id)
+        subdir_extras = subdir_extras.replace('%gamename%', game_id)
 
-            cwd = self.builder.get_object('btn_target').get_filename()
-            cmd = ['lgogdownloader']
-            if is_inst:
-                self.term.feed("\n** Downloading: %s\r\n" % game_id)
-                self.term.feed("   Target directory: %s\r\n" % cwd)
-                cmd.extend(['--platform',
-                           str((win * PLAT_WIN) +
-                               (lin * PLAT_LIN) +
-                               (mac * PLAT_MAC))])
-                cmd.extend(['--download', '--no-extras',
-                            '--game', '^%s$' % game_id])
-            else:
-                do_fix = self.builder.get_object("chk_path_fixup").get_active()
-                if do_fix and not no_subdirs:
-                    cwd = os.path.join(cwd, subdir_game, subdir_extras)
-                    if not os.path.exists(cwd):
-                        os.makedirs(cwd)
-                path = "%s/%s" % (game_id, file_id)
-                self.term.feed("\n** Downloading: %s\r\n" % path)
-                self.term.feed("   Target Directory: %s\r\n" %
-                               os.path.join(cwd, "."))
-                cmd.extend(['--download-file', path])
-
-            self.term.fork_command(cmd[0], cmd, None, cwd)
+        tgt = self.builder.get_object('btn_target').get_filename()
+        cmd = ['lgogdownloader']
+        if is_inst:
+            cmd.extend(['--platform',
+                        str((win * PLAT_WIN) +
+                           (lin * PLAT_LIN) +
+                           (mac * PLAT_MAC)),
+                        '--download', '--no-extras',
+                        '--game', '^%s$' % game_id])
         else:
-            self.term.feed("\r\n** Done. (Queue emptied)")
-            self.builder.get_object('btn_go').set_sensitive(True)
+            do_fix = self.builder.get_object("chk_path_fixup").get_active()
+            if do_fix and not no_subdirs:
+                tgt = os.path.join(tgt, subdir_game, subdir_extras)
+                if not os.path.exists(tgt):
+                    # TODO: Decide how to handle failure here gracefully
+                    os.makedirs(tgt)
+
+            path = "%s/%s" % (game_id, file_id)
+            cmd.extend(['--download-file', path])
+
+        self.term.fork_command(cmd[0], cmd, None, tgt)
 
     def on_btn_go_clicked(self, widget, event=None):  # pylint: disable=W0613
         """Callback for the 'Save' button"""
-        widget.set_sensitive(False)
         nbook = self.builder.get_object('nbook_main')
         nbook.set_show_tabs(True)
         nbook.set_current_page(nbook.page_num(
             self.builder.get_object("vbox_term")))
         self.next_download()
+
+        # Do this as late as possible to minimize the chance that an exception
+        # could leave it un-sensitive
+        widget.set_sensitive(False)
 
     def on_cell_toggled(self, cellrenderer, path):
         """Handler for enabling clicks on checkbox cells."""
@@ -256,10 +290,9 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
 
     def on_child_exited(self, widget):
         """Handler to start next download when lgogdownloader exits."""
-        status = widget.get_child_exit_status()
-        if status != 0:
+        if widget.get_child_exit_status() != 0:
             # TODO: Redesign the queue so this can be indicated by icons
-            widget.feed("-- DOWNLOAD FAILED --" % status)
+            widget.feed("-- DOWNLOAD FAILED --")
         self.next_download()
 
     def on_view_dlqueue_key_press_event(self, widget, event):
@@ -271,20 +304,20 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
                 self.data.remove(self.data.get_iter(path))
 
     # pylint: disable=unused-argument,invalid-name
-    def on_view_dlqueue_button_press_event(self, widget, event):
+    def on_view_dlqueue_button_press_event(self, widget, event=None):
         """Right-click and Menu button handler for the TreeView.
 
         Source: http://faq.pygtk.org/index.py?req=show&file=faq13.017.htp
         """
         treeview = self.builder.get_object('view_dlqueue')
-        if event and event.button == 3:
+        if event and event.button == 3:  # Right Click
             btn = event.button
             x, y, time = int(event.x), int(event.y), event.time
-        elif event:
+        elif event:                      # Non-right Click
             return None
-        elif not event:  # Menu key on the keyboard
+        elif not event:                  # Menu key on the keyboard
             cursor = treeview.get_cursor()
-            if not cursor[0]:
+            if cursor[0] is None:
                 return None
 
             x, y, _, _ = treeview.get_cell_area(*cursor)
@@ -333,7 +366,7 @@ def main():
     """The main entry point, compatible with setuptools entry points."""
     from optparse import OptionParser
     parser = OptionParser(version="%%prog v%s" % __version__,
-            usage="%prog [options] <argument> ...",
+            usage="%prog [options] <gogdownloader URI> ...",
             description=__doc__.replace('\r\n', '\n').split('\n--snip--\n')[0])
     parser.add_option('-v', '--verbose', action="count", dest="verbose",
         default=2, help="Increase the verbosity. Use twice for extra effect")
@@ -356,8 +389,7 @@ def main():
 
     dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
     bus = dbus.SessionBus()
-    request = bus.request_name("com.ssokolow.lgogd_uri",
-                               dbus.bus.NAME_FLAG_DO_NOT_QUEUE)
+    request = bus.request_name(SVC_NAME, dbus.bus.NAME_FLAG_DO_NOT_QUEUE)
     if request != dbus.bus.REQUEST_NAME_REPLY_EXISTS:
         app = Application(bus, '/', SVC_NAME)
     else:
