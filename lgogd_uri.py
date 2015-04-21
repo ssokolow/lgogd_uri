@@ -144,7 +144,6 @@ class Application(dbus.service.Object):
     def enqueue_uris(self, arguments):
         platforms = self.conf.get('platform', PLAT_DEF)
 
-        rows = []
         for arg in arguments:
             for game_id, file_id in parse_uri(arg):
                 is_installer = 'installer' in file_id
@@ -157,7 +156,6 @@ class Application(dbus.service.Object):
                     platforms & PLAT_LIN,
                     platforms & PLAT_MAC,
                     is_extra))
-        return rows
 
     def gtk_main_quit(self, widget, event):
         """Helper for Builder.connect_signals"""
