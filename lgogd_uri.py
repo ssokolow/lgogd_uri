@@ -63,6 +63,13 @@ try:
 except ImportError:
     sys.stderr.write("Missing PyGTK! Exiting.\n")
 
+try:
+    import vte
+except ImportError:
+    gtk.MessageDialog(None, gtk.DIALOG_MODAL,
+                      gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
+                      "Missing python-vte! Exiting.")
+    sys.exit(1)
 
 def get_lgogd_conf():
     """Read and parse lgogdownloader's config file."""
@@ -122,6 +129,8 @@ class Application(dbus.service.Object):
         self.builder.get_object('btn_target').set_filename(tgt_path)
 
         self.data = self.builder.get_object('store_dlqueue')
+        self.term = vte.Terminal()
+        self.builder.get_object("vbox_term").add(self.term)
         self.builder.get_object('mainwin').show_all()
 
     def gtkbuilder_load(self, path):
@@ -170,6 +179,14 @@ class Application(dbus.service.Object):
     def gtk_main_quit(self, widget, event):
         """Helper for Builder.connect_signals"""
         gtk.main_quit()
+
+    def on_btn_go_clicked(self, widget, event=None):
+        print("FOO")
+        widget.set_sensitive(False)
+        nbook = self.builder.get_object('nbook_main')
+        nbook.set_show_tabs(True)
+        nbook.set_current_page(nbook.page_num(
+            self.builder.get_object("vbox_term")))
 
     def on_cell_toggled(self, cellrenderer, path):
         """Handler for enabling clicks on checkbox cells."""

@@ -2,10 +2,24 @@
 <interface>
   <requires lib="gtk+" version="2.24"/>
   <!-- interface-naming-policy project-wide -->
-  <object class="GtkAdjustment" id="adjustment1">
+  <object class="GtkAdjustment" id="adjustment_dlqueue_vscroll">
     <property name="upper">100</property>
     <property name="step_increment">1</property>
     <property name="page_increment">10</property>
+  </object>
+  <object class="GtkExpander" id="expander1">
+    <property name="visible">True</property>
+    <property name="can_focus">True</property>
+    <child>
+      <placeholder/>
+    </child>
+    <child type="label">
+      <object class="GtkLabel" id="label1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">expander</property>
+      </object>
+    </child>
   </object>
   <object class="GtkImage" id="img_linux">
     <property name="visible">True</property>
@@ -25,98 +39,124 @@
   <object class="GtkWindow" id="mainwin">
     <property name="can_focus">False</property>
     <property name="title" translatable="yes">GOG Downloader</property>
+    <property name="icon_name">document-save</property>
     <signal name="delete-event" handler="gtk_main_quit" swapped="no"/>
     <child>
-      <object class="GtkVBox" id="vbox">
+      <object class="GtkNotebook" id="nbook_main">
         <property name="visible">True</property>
-        <property name="can_focus">False</property>
+        <property name="can_focus">True</property>
+        <property name="show_tabs">False</property>
         <child>
-          <object class="GtkHBox" id="hbox1">
+          <object class="GtkVBox" id="vbox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
-              <object class="GtkTreeView" id="view_dlqueue">
-                <property name="height_request">200</property>
+              <object class="GtkHBox" id="hbox1">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="model">store_dlqueue</property>
-                <property name="vadjustment">adjustment1</property>
-                <property name="headers_clickable">False</property>
-                <property name="reorderable">True</property>
-                <property name="search_column">0</property>
-                <signal name="button-press-event" handler="on_view_dlqueue_button_press_event" swapped="no"/>
-                <signal name="key-press-event" handler="on_view_dlqueue_key_press_event" swapped="no"/>
-                <signal name="popup-menu" handler="on_view_dlqueue_button_press_event" swapped="no"/>
-                <signal name="scroll-event" handler="on_view_dlqueue_scroll_event" swapped="no"/>
+                <property name="can_focus">False</property>
                 <child>
-                  <object class="GtkTreeViewColumn" id="col_game">
-                    <property name="resizable">True</property>
-                    <property name="title" translatable="yes">Game</property>
+                  <object class="GtkTreeView" id="view_dlqueue">
+                    <property name="height_request">200</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="model">store_dlqueue</property>
+                    <property name="vadjustment">adjustment_dlqueue_vscroll</property>
+                    <property name="headers_clickable">False</property>
+                    <property name="reorderable">True</property>
+                    <property name="search_column">0</property>
+                    <signal name="button-press-event" handler="on_view_dlqueue_button_press_event" swapped="no"/>
+                    <signal name="key-press-event" handler="on_view_dlqueue_key_press_event" swapped="no"/>
+                    <signal name="popup-menu" handler="on_view_dlqueue_button_press_event" swapped="no"/>
+                    <signal name="scroll-event" handler="on_view_dlqueue_scroll_event" swapped="no"/>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="col_game">
+                        <property name="resizable">True</property>
+                        <property name="title" translatable="yes">Game</property>
+                        <property name="expand">True</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="cell_game"/>
+                          <attributes>
+                            <attribute name="text">0</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="col_file">
+                        <property name="title" translatable="yes">File ID</property>
+                        <child>
+                          <object class="GtkCellRendererText" id="cell_file"/>
+                          <attributes>
+                            <attribute name="visible">6</attribute>
+                            <attribute name="text">1</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="col_windows">
+                        <property name="title" translatable="yes">windows</property>
+                        <property name="widget">img_windows</property>
+                        <child>
+                          <object class="GtkCellRendererToggle" id="cell_windows">
+                            <signal name="toggled" handler="on_cell_toggled" swapped="no"/>
+                          </object>
+                          <attributes>
+                            <attribute name="visible">2</attribute>
+                            <attribute name="active">3</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="col_linux">
+                        <property name="title" translatable="yes">linux</property>
+                        <property name="widget">img_linux</property>
+                        <child>
+                          <object class="GtkCellRendererToggle" id="cell_linux">
+                            <signal name="toggled" handler="on_cell_toggled" swapped="no"/>
+                          </object>
+                          <attributes>
+                            <attribute name="visible">2</attribute>
+                            <attribute name="active">4</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkTreeViewColumn" id="col_mac">
+                        <property name="title" translatable="yes">linux</property>
+                        <property name="widget">img_mac</property>
+                        <child>
+                          <object class="GtkCellRendererToggle" id="cell_mac">
+                            <signal name="toggled" handler="on_cell_toggled" swapped="no"/>
+                          </object>
+                          <attributes>
+                            <attribute name="visible">2</attribute>
+                            <attribute name="active">5</attribute>
+                          </attributes>
+                        </child>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
                     <property name="expand">True</property>
-                    <child>
-                      <object class="GtkCellRendererText" id="cell_game"/>
-                      <attributes>
-                        <attribute name="text">0</attribute>
-                      </attributes>
-                    </child>
-                  </object>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
                 </child>
                 <child>
-                  <object class="GtkTreeViewColumn" id="col_file">
-                    <property name="title" translatable="yes">File ID</property>
-                    <child>
-                      <object class="GtkCellRendererText" id="cell_file"/>
-                      <attributes>
-                        <attribute name="visible">6</attribute>
-                        <attribute name="text">1</attribute>
-                      </attributes>
-                    </child>
+                  <object class="GtkVScrollbar" id="vscrollbar1">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="adjustment">adjustment_dlqueue_vscroll</property>
                   </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="col_windows">
-                    <property name="title" translatable="yes">windows</property>
-                    <property name="widget">img_windows</property>
-                    <child>
-                      <object class="GtkCellRendererToggle" id="cell_windows">
-                        <signal name="toggled" handler="on_cell_toggled" swapped="no"/>
-                      </object>
-                      <attributes>
-                        <attribute name="visible">2</attribute>
-                        <attribute name="active">3</attribute>
-                      </attributes>
-                    </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="col_linux">
-                    <property name="title" translatable="yes">linux</property>
-                    <property name="widget">img_linux</property>
-                    <child>
-                      <object class="GtkCellRendererToggle" id="cell_linux">
-                        <signal name="toggled" handler="on_cell_toggled" swapped="no"/>
-                      </object>
-                      <attributes>
-                        <attribute name="visible">2</attribute>
-                        <attribute name="active">4</attribute>
-                      </attributes>
-                    </child>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkTreeViewColumn" id="col_mac">
-                    <property name="title" translatable="yes">linux</property>
-                    <property name="widget">img_mac</property>
-                    <child>
-                      <object class="GtkCellRendererToggle" id="cell_mac">
-                        <signal name="toggled" handler="on_cell_toggled" swapped="no"/>
-                      </object>
-                      <attributes>
-                        <attribute name="visible">2</attribute>
-                        <attribute name="active">5</attribute>
-                      </attributes>
-                    </child>
-                  </object>
+                  <packing>
+                    <property name="expand">False</property>
+                    <property name="fill">True</property>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
               </object>
               <packing>
@@ -126,10 +166,11 @@
               </packing>
             </child>
             <child>
-              <object class="GtkVScrollbar" id="vscrollbar1">
+              <object class="GtkFileChooserButton" id="btn_target">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
-                <property name="adjustment">adjustment1</property>
+                <property name="action">select-folder</property>
+                <property name="title" translatable="yes">Select Target Folder</property>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -137,39 +178,56 @@
                 <property name="position">1</property>
               </packing>
             </child>
+            <child>
+              <object class="GtkButton" id="btn_go">
+                <property name="label">gtk-save</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">False</property>
+                <property name="use_action_appearance">False</property>
+                <property name="use_stock">True</property>
+                <signal name="activate" handler="on_btn_go_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_btn_go_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+        </child>
+        <child type="tab">
+          <object class="GtkLabel" id="lbl_tab_queue">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Queue</property>
           </object>
           <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
+            <property name="tab_fill">False</property>
           </packing>
         </child>
         <child>
-          <object class="GtkFileChooserButton" id="btn_target">
+          <object class="GtkVBox" id="vbox_term">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="action">select-folder</property>
-            <property name="title" translatable="yes">Select Target Folder</property>
+            <child>
+              <placeholder/>
+            </child>
           </object>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>
-        <child>
-          <object class="GtkButton" id="btn_go">
-            <property name="label">gtk-save</property>
+        <child type="tab">
+          <object class="GtkLabel" id="lbl_tab_progress">
             <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">True</property>
-            <property name="use_action_appearance">False</property>
-            <property name="use_stock">True</property>
+            <property name="can_focus">False</property>
+            <property name="label" translatable="yes">Progress</property>
           </object>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">1</property>
+            <property name="tab_fill">False</property>
           </packing>
         </child>
       </object>
