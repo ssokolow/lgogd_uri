@@ -3,21 +3,29 @@ to enable support for the convenient `gogdownloader://` URIs GOG.com offers.
 
 ## Features
 
-* Minimal but featureful GUI designed for comfort and convenience
+* Minimal but featureful queueing GUI designed for comfort and convenience
+
+  ![main window screenshot](img/sshot_mainwin.png)
+
+* Built-in terminal for lgogdownloader status without making your window
+  manager sweat.
+
+  ![terminal tab screenshot](img/sshot_term.png)
+
 * Anything not configurable via the GUI will obey lgogdownloader's
   `config.cfg`.
 
-  ```rc
+  ```ini
 language = 1
 limit-rate = 300
-no-deb = false
-no-language-packs = false
-no-patches = false
-no-subdirectories = false
-no-targz = false
+no-targz = true
 retries = 3
 save-serials = true
   ```
+
+* Remembers your preferred destination directory
+
+  !["Save Into" screenshot](img/sshot_save_into.png)
 
 * Support for selecting Linux downloads despite the site not offering
   `gogdownloader://` URIs for them
@@ -27,6 +35,9 @@ save-serials = true
 * Libnotify notification when all downloads are complete.
 
   ![notification screenshot](img/sshot_notification.png)
+
+* Add, reorder, and delete remaining queue entries while a download is in
+  progress. (Including changing the target directory for future downloads)
 
 ## Installation
 
@@ -48,7 +59,9 @@ This *should* make it work for both Firefox and Chrome, since both listen to
 `xdg-mime default ...` but, depending on your version, you may need to restart
 Firefox to get it to notice.
 
-**Debugging:**
+### Debugging:
+
+If your browser still doesn't want to handle `gogdownloader://` links...
 
 1. Run `xdg-open gogdownloader://ultima_4/installer_win_en` in a terminal.
    If that works, then your browser isn't obeying system defaults properly
@@ -60,24 +73,29 @@ Firefox to get it to notice.
    `lgogd_uri.desktop` file wasn't installed in the right place or the
    "Set it as your default handler" step failed.
 
-Some of the things you can try are:
-
-* Restarting your browser after it's all done
-
-Depending on how your browser is
-configured, you may need extra steps to make it
-
-
 ## Uninstallation
 
     sudo pip uninstall lgogd_uri
 
-## Known Issues
+## Known Shortcomings
 
+* Providing the option to download Linux versions via the Windows or MacOS
+  `gogdownloader://` URLs has resulted in the language-selection drop-down
+  being ignored in favour of the `language` option in lgogdownloader's
+  `config.cfg`
 * Multi-selection doesn't get along with GTKTreeView's built-in drag-and-drop
   reordering and context-menu support. (Use the Delete key for batch deletion)
+* Currently, no attempt is made to retrieve game metadata, so the "Game" and
+  "File ID" columns don't give the nice, pretty output the official GOG
+  downloader offers.
+* No attempt is currently made to deduplicate the queue, relying instead on
+  LGOGDownloader to not redownload files which already exist.
 
 ## License
 
-MIT except for three easy-to-replace platform logo icons copied from the
-GOG.com site theme. (`windows.png`, `linux.png`, and `mac.png`)
+[MIT](http://opensource.org/licenses/MIT) except for three easy-to-replace
+platform logo icons copied from the GOG.com site theme.
+
+* `windows.png`
+* `linux.png`
+* `mac.png`
