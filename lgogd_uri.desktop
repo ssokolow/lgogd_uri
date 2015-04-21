@@ -8,5 +8,6 @@ Comment=A simple frontend to allow lgogdownloader to handle gogdownloader:// URI
 TryExec=lgogd_uri
 Exec=lgogd_uri.py %U
 Terminal=false
+NoDisplay=true
 MimeType=x-scheme-handler/gogdownloader
 Categories=Utility;GTK
