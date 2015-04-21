@@ -239,8 +239,16 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
         iter_last = None
         for arg in arguments:
             for game_id, file_id in parse_uri(arg):
-                is_installer = 'installer' in file_id
-                is_extra = not is_installer  # Used by cell visibility binding
+                is_patch = 'patch' in file_id
+
+                # is_installer triggers the UI and code for allowing Win/Mac
+                # links to result in Linux downloads, so patches are also
+                # installers for our purposes.
+                is_installer = ('installer' in file_id) or is_patch
+
+                # Used by cell visibility binding
+                not_installer = is_patch or (not is_installer)
+
                 iter_last = self.data.append((
                     game_id,
                     file_id,
@@ -248,7 +256,8 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
                     platforms & PLAT_WIN,
                     platforms & PLAT_LIN,
                     platforms & PLAT_MAC,
-                    is_extra))
+                    not_installer,
+                    is_patch))
 
         # Ensure that all added entries are made visible unless the window
         # isn't tall enough.
@@ -275,32 +284,45 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
             return
 
         no_subdirs = self.lgd_conf.get('no-subdirectories', False)
-        subdir_game = self.lgd_conf.get('subdir-game', SUBDIR_GAME)
-        subdir_extras = self.lgd_conf.get('subdir-extras', SUBDIR_EXTRAS)
 
         # TODO: Rather than popping it off the store, use a status column
         #       so that users can easily see and retry failed downloads.
-        (game_id, file_id, is_inst, win, lin, mac
-         ) = self.data.get(queue_iter, 0, 1, 2, 3, 4, 5)
+        (game_id, file_id, is_inst, win, lin, mac, is_patch
+         ) = self.data.get(queue_iter, 0, 1, 2, 3, 4, 5, 7)
         self.data.remove(queue_iter)
 
-        # Limited support for --subdir-game and --subdir-extras
-        subdir_game = subdir_game.replace('%gamename%', game_id)
-        subdir_extras = subdir_extras.replace('%gamename%', game_id)
+        subdirs = {}
+        for key, default in (
+                ('subdir-game', SUBDIR_GAME),
+                ('subdir-extras', SUBDIR_EXTRAS)):
+            subdirs[key] = self.lgd_conf.get(key, default)
+
+            # Limited support for --subdir-game and --subdir-extras
+            subdirs[key] = subdirs[key].replace('%gamename%', game_id)
 
         tgt = self.builder.get_object('btn_target').get_filename()
         cmd = ['lgogdownloader']
         if is_inst:
-            cmd.extend(['--platform',
-                        str((win * PLAT_WIN) +
-                           (lin * PLAT_LIN) +
-                           (mac * PLAT_MAC)),
-                        '--download', '--no-extras',
-                        '--game', '^%s$' % game_id])
+            if is_patch:
+                cmd.extend(['--platform',
+                            str((win * PLAT_WIN) +
+                               (lin * PLAT_LIN) +
+                               (mac * PLAT_MAC)),
+                            '--download', '--no-extras', '--no-installers',
+                            '--game', '^%s$' % game_id])
+            else:
+                cmd.extend(['--platform',
+                            str((win * PLAT_WIN) +
+                               (lin * PLAT_LIN) +
+                               (mac * PLAT_MAC)),
+                            '--download', '--no-extras',
+                            '--game', '^%s$' % game_id])
         else:
             do_fix = self.builder.get_object("chk_path_fixup").get_active()
             if do_fix and not no_subdirs:
-                tgt = os.path.join(tgt, subdir_game, subdir_extras)
+                tgt = os.path.join(tgt,
+                                   subdirs['subdir-game'],
+                                   subdirs['subdir-extras'])
                 if not os.path.exists(tgt):
                     # TODO: Decide how to handle failure here gracefully
                     os.makedirs(tgt)

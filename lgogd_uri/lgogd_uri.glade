@@ -298,7 +298,9 @@
       <column type="gboolean"/>
       <!-- column-name Mac -->
       <column type="gboolean"/>
-      <!-- column-name is_extra -->
+      <!-- column-name not_installer -->
+      <column type="gboolean"/>
+      <!-- column-name is_patch -->
       <column type="gboolean"/>
     </columns>
   </object>
