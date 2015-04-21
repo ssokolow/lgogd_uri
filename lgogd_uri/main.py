@@ -201,7 +201,9 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         self.term.connect("child-exited", self.on_child_exited)
         self.builder.get_object("vbox_term").add(self.term)
 
-        self.builder.get_object('mainwin').show_all()
+        mainwin = self.builder.get_object('mainwin')
+        mainwin.set_title('%s %s' % (mainwin.get_title(), __version__))
+        mainwin.show_all()
 
     def gtkbuilder_load(self, path):
         """Wrapper to work around the brokenness of
