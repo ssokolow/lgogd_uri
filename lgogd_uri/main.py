@@ -180,8 +180,8 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         self.builder.get_object('btn_target').set_filename(tgt_path)
 
         # FIXME: Figure out how to preserve multi-select during drag-start
-        #tview = self.builder.get_object("view_dlqueue")
-        #tview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
+        tview = self.builder.get_object("view_dlqueue")
+        tview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 
         # VTE widgets aren't offered by Glade. Add and config at runtime.
         self.term = vte.Terminal()
@@ -320,9 +320,10 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         """Handler for enabling the Delete key"""
         if (event.type == gtk.gdk.KEY_PRESS and
                 event.keyval == gtk.keysyms.Delete):
-            path = widget.get_cursor()[0]
-            if path:
-                self.data.remove(self.data.get_iter(path))
+            model, rows = widget.get_selection().get_selected_rows()
+            rows = [gtk.TreeRowReference(model, x) for x in rows]
+            for ref in rows:
+                model.remove(model.get_iter(ref.get_path()))
 
     # pylint: disable=unused-argument,invalid-name
     def on_view_dlqueue_button_press_event(self, widget, event=None):
