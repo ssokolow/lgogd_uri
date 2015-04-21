@@ -3,6 +3,8 @@
 """Wrapper for lgogdownloader to support queueing up gogdownloader:// URIs
 Copyright (C) 2015 Stephan Sokolow
 
+--snip--
+
 Thanks to Luca "Lethalman" Bruno for the code to implement a single-instance
 application via D-Bus.
 http://lethalman.blogspot.ca/2008/11/single-app-instances-python-and-dbus.html
@@ -68,7 +70,7 @@ except ImportError:
 # Present tracebacks as non-fatal errors in the GUI for more user-friendliness
 # TODO: In concert with this, I'll probably want some kind of failsafe
 #       for re-enabling the Save button if necessary.
-import gtkexcepthook
+from lgogd_uri import gtkexcepthook
 gtkexcepthook.enable()
 
 try:
@@ -219,6 +221,7 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         """Code common to launch and raise sides of single instancing."""
         platforms = self.lgd_conf.get('platform', PLAT_DEF)
 
+        iter_last = None
         for arg in arguments:
             for game_id, file_id in parse_uri(arg):
                 is_installer = 'installer' in file_id
@@ -234,8 +237,9 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
 
         # Ensure that all added entries are made visible unless the window
         # isn't tall enough.
-        path_last = self.data.get_path(iter_last)
-        self.builder.get_object('view_dlqueue').scroll_to_cell(path_last)
+        if iter_last:
+            path_last = self.data.get_path(iter_last)
+            self.builder.get_object('view_dlqueue').scroll_to_cell(path_last)
 
     def gtk_main_quit(self, widget, event):  # pylint: disable=R0201,W0613
         """Helper for Builder.connect_signals"""
