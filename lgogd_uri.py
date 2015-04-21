@@ -76,6 +76,16 @@ try:
 except ImportError:
     sys.stderr.write("Missing dbus-python! Exiting.\n")
     sys.exit(1)
+
+try:
+    import notify2 as notify
+except ImportError:
+    try:
+        import pynotify as notify
+    except ImportError:
+        log.warning("Missing libnotify bindings! Notifications will not show.")
+        notify = None
+
 try:
     import vte
 except ImportError:
@@ -142,6 +152,7 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         self.data = None
         self.toggle_map = {}
         self.lgd_conf = None
+        self.notification = None
         self.term = None
 
     def _init_gui(self):
@@ -151,6 +162,11 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
 
         # Load the lgogdownloader settings
         self.lgd_conf = get_lgogd_conf()
+
+        # Prepare a libnotify notification we can reuse
+        if notify and notify.init("lgogd_uri"):
+            self.notification = notify.Notification("GOG Downloads Complete",
+                                                    icon='document-save')
 
         # Set the default target directory to the user's Downloads folder
         # TODO: Save customized values
@@ -233,6 +249,7 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
             # an exception caught by gtkexcepthook.py will leave btn_go grayed
             self.builder.get_object('btn_go').set_sensitive(True)
             self.term.feed("\r\n** Done. (Queue emptied)")
+            self.notification.show()
             return
 
         no_subdirs = self.lgd_conf.get('no-subdirectories', False)
