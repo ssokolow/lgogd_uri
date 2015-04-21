@@ -40,6 +40,8 @@ PLAT_MAC = 2
 PLAT_LIN = 4
 PLAT_DEF = 5  # Default
 PLAT_ALL = 7
+SUBDIR_GAME = '%gamename%'
+SUBDIR_EXTRAS = 'extras'
 
 import logging, os, subprocess, sys, time
 from xml.etree import cElementTree as ET
@@ -128,9 +130,12 @@ class Application(dbus.service.Object):
             ["xdg-user-dir", "DOWNLOAD"]).strip()
         self.builder.get_object('btn_target').set_filename(tgt_path)
 
+        # VTE widgets aren't offered by Glade
         self.data = self.builder.get_object('store_dlqueue')
         self.term = vte.Terminal()
+        self.term.connect("child-exited", self.on_child_exited)
         self.builder.get_object("vbox_term").add(self.term)
+
         self.builder.get_object('mainwin').show_all()
 
     def gtkbuilder_load(self, path):
@@ -180,18 +185,66 @@ class Application(dbus.service.Object):
         """Helper for Builder.connect_signals"""
         gtk.main_quit()
 
+    def next_download(self):
+        no_subdirs = self.lgd_conf.get('no-subdirectories', False)
+        subdir_game = self.lgd_conf.get('subdir-game', SUBDIR_GAME)
+        subdir_extras = self.lgd_conf.get('subdir-extras', SUBDIR_EXTRAS)
+
+        queue_iter = self.data.get_iter_first()
+        if queue_iter:
+            # TODO: Rather than popping it off the store, use a status column
+            (game_id, file_id, is_inst, win, lin, mac
+             ) = self.data.get(queue_iter, 0, 1, 2, 3, 4, 5)
+            self.data.remove(queue_iter)
+
+            # Limited support for --subdir-game and --subdir-extras
+            subdir_game = subdir_game.replace('%gamename%', game_id)
+            subdir_extras = subdir_extras.replace('%gamename%', game_id)
+
+            cwd = self.builder.get_object('btn_target').get_filename()
+            cmd = ['lgogdownloader']
+            if is_inst:
+                cmd.extend(['--platform',
+                           str((win * PLAT_WIN) +
+                               (lin * PLAT_LIN) +
+                               (mac * PLAT_MAC))])
+                cmd.extend(['--download', '--no-extras',
+                            '--game', '^%s$' % game_id])
+            else:
+                do_fix = self.builder.get_object("chk_path_fixup").get_active()
+                if do_fix and not no_subdirs:
+                    cwd = os.path.join(cwd, subdir_game, subdir_extras)
+                    if not os.path.exists(cwd):
+                        os.makedirs(cwd)
+                path = "%s/%s" % (game_id, file_id)
+                cmd.extend(['--download-file', path])
+
+            self.term.fork_command(cmd[0], cmd, None, cwd)
+        else:
+            self.term.feed("\r\n** Done. (Queue emptied)")
+            self.builder.get_object('btn_go').set_sensitive(True)
+
     def on_btn_go_clicked(self, widget, event=None):
-        print("FOO")
+        """Callback for the 'Save' button"""
         widget.set_sensitive(False)
         nbook = self.builder.get_object('nbook_main')
         nbook.set_show_tabs(True)
         nbook.set_current_page(nbook.page_num(
             self.builder.get_object("vbox_term")))
+        self.next_download()
 
     def on_cell_toggled(self, cellrenderer, path):
         """Handler for enabling clicks on checkbox cells."""
         idx = self.toggle_map[cellrenderer]
         self.data[path][idx] = not self.data[path][idx]
+
+    def on_child_exited(self, widget):
+        """Handler to start next download when lgogdownloader exits."""
+        status = widget.get_child_exit_status()
+        if status != 0:
+            # TODO: Redesign the queue so this can be indicated by icons
+            widget.feed("-- DOWNLOAD FAILED --" % status)
+        self.next_download()
 
     def on_view_dlqueue_key_press_event(self, widget, event):
         """Handler for enabling the Delete key"""
