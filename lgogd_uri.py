@@ -65,6 +65,9 @@ try:
 except ImportError:
     sys.stderr.write("Missing PyGTK! Exiting.\n")
 
+import gtkexcepthook
+gtkexcepthook.enable()
+
 try:
     import vte
 except ImportError:
