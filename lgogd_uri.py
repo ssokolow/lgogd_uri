@@ -146,11 +146,17 @@ class Application(dbus.service.Object):
 
         rows = []
         for arg in arguments:
-            for entry in parse_uri(arg):
-                self.data.append(entry + (
+            for game_id, file_id in parse_uri(arg):
+                is_installer = 'installer' in file_id
+                is_extra = not is_installer  # For Glade compatibility
+                self.data.append((
+                    game_id,
+                    file_id,
+                    is_installer,
                     platforms & PLAT_WIN,
                     platforms & PLAT_LIN,
-                    platforms & PLAT_MAC))
+                    platforms & PLAT_MAC,
+                    is_extra))
         return rows
 
     def gtk_main_quit(self, widget, event):
@@ -171,6 +177,10 @@ class Application(dbus.service.Object):
                 self.data.remove(self.data.get_iter(path))
 
     def on_view_dlqueue_button_press_event(self, widget, event=None):
+        """Right-click and Menu button handler for the TreeView.
+
+        Source: http://faq.pygtk.org/index.py?req=show&file=faq13.017.htp
+        """
         treeview = self.builder.get_object('view_dlqueue')
         if event and event.button == 3:
                 btn = event.button
@@ -193,6 +203,15 @@ class Application(dbus.service.Object):
         self.builder.get_object("popup_dlqueue").popup(
             None, None, None, btn, time)
         return True
+
+    def on_view_dlqueue_scroll_event(self, widget, event):
+        adj = widget.get_vadjustment()
+        cur, incr = adj.get_value(), adj.get_page_increment() / 2.0
+        if event.direction == gtk.gdk.SCROLL_UP:
+            adj.set_value(cur - incr)
+        elif event.direction == gtk.gdk.SCROLL_DOWN:
+            adj.set_value(min(
+                cur + incr, adj.get_upper() - adj.get_page_increment()))
 
     def on_dlqueue_delete_activate(self, widget):
         path = self.builder.get_object('view_dlqueue').get_cursor()[0]
