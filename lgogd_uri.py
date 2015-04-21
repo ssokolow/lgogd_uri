@@ -113,7 +113,7 @@ class Application(dbus.service.Object):
         # Shut up PyLint
         self.builder = gtk.Builder()
         self.toggle_map = {}
-        self.conf = None
+        self.lgd_conf = None
         self.data = None
 
     def _init_gui(self):
@@ -121,7 +121,7 @@ class Application(dbus.service.Object):
         self.gtkbuilder_load('lgogd_uri.glade')
 
         # Load the lgogdownloader settings
-        self.conf = get_lgogd_conf()
+        self.lgd_conf = get_lgogd_conf()
 
         # TODO: Save customized values
         tgt_path = subprocess.check_output(
@@ -159,7 +159,7 @@ class Application(dbus.service.Object):
         return self.running
 
     def enqueue_uris(self, arguments):
-        platforms = self.conf.get('platform', PLAT_DEF)
+        platforms = self.lgd_conf.get('platform', PLAT_DEF)
 
         for arg in arguments:
             for game_id, file_id in parse_uri(arg):
