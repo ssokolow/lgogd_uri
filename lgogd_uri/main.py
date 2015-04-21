@@ -276,7 +276,7 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
             # Do this as early as possible to minimize the chance that
             # an exception caught by gtkexcepthook.py will leave btn_go grayed
             self.builder.get_object('btn_go').set_sensitive(True)
-            self.term.feed("\r\n** Done. (Queue emptied) **")
+            self.term.feed("\r\n** Done. (Queue emptied) **\r\n")
             try:
                 self.notification.show()
             except dbus.DBusException, err:
@@ -303,6 +303,7 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
         tgt = self.builder.get_object('btn_target').get_filename()
         cmd = ['lgogdownloader']
         if is_inst:
+            self.term.feed("\rRetrieving your shelf. This may take time.\r\n")
             if is_patch:
                 cmd.extend(['--platform',
                             str((win * PLAT_WIN) +
