@@ -41,7 +41,7 @@ PLAT_LIN = 4
 PLAT_DEF = 5  # Default
 PLAT_ALL = 7
 
-import logging, os, subprocess, time
+import logging, os, subprocess, sys, time
 from xml.etree import cElementTree as ET
 log = logging.getLogger(__name__)
 
@@ -53,8 +53,16 @@ try:
 except ImportError:
     pass
 
-import dbus, dbus.bus, dbus.service, dbus.mainloop.glib
-import gobject, gtk, gtk.gdk
+try:
+    import dbus, dbus.bus, dbus.service, dbus.mainloop.glib
+except ImportError:
+    sys.stderr.write("Missing dbus-python! Exiting.\n")
+
+try:
+    import gobject, gtk, gtk.gdk
+except ImportError:
+    sys.stderr.write("Missing PyGTK! Exiting.\n")
+
 
 def get_lgogd_conf():
     """Read and parse lgogdownloader's config file."""
