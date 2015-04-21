@@ -88,12 +88,14 @@ If your browser still doesn't want to handle `gogdownloader://` links...
   `config.cfg`
 * Multi-selection doesn't get along with GTKTreeView's built-in drag-and-drop
   reordering and context-menu support. (Use the Delete key for batch deletion)
+* Remembering un-finished downloads across a restart is still on the TODO list.
 * Currently, no attempt is made to retrieve game metadata, so the "Game" and
   "File ID" columns don't give the nice, pretty output the official GOG
   downloader offers and the platform checkboxes will always start out set
   to the value of `platform` in your `config.cfg`.
 * No attempt is currently made to deduplicate the queue, relying instead on
   LGOGDownloader to not redownload files which already exist.
+* Fixup support for `--download-file` currently only resolves `%gamename%`
 
 ## License
 
