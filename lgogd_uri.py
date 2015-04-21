@@ -44,7 +44,7 @@ SUBDIR_GAME = '%gamename%'
 SUBDIR_EXTRAS = 'extras'
 
 import logging, os, subprocess, sys, time
-from xml.etree import cElementTree as ET
+from xml.etree import cElementTree as ET  # NOQA
 log = logging.getLogger(__name__)
 
 RES_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -61,7 +61,7 @@ except ImportError:
     sys.stderr.write("Missing dbus-python! Exiting.\n")
 
 try:
-    import gobject, gtk, gtk.gdk
+    import gtk, gtk.gdk  # pylint: disable=import-error
 except ImportError:
     sys.stderr.write("Missing PyGTK! Exiting.\n")
 
@@ -79,9 +79,10 @@ except ImportError:
 def get_lgogd_conf():
     """Read and parse lgogdownloader's config file."""
     results = {}
+    # pylint: disable=invalid-name
     with open(os.path.expanduser("~/.config/lgogdownloader/config.cfg")) as fh:
         for line in fh:
-            x, y = [i.strip() for i in line.strip().split('=',1)]
+            x, y = [i.strip() for i in line.strip().split('=', 1)]
             if y.lower() == 'true':
                 y = True
             elif y.lower() == 'false':
@@ -110,16 +111,17 @@ def parse_uri(uri):
         results.append(tuple(filepath.split('/', 1)))
     return results
 
-class Application(dbus.service.Object):
+class Application(dbus.service.Object):  # pylint: disable=missing-docstring
     def __init__(self, bus, path, name):
         dbus.service.Object.__init__(self, bus, path, name)
         self.running = False
 
         # Shut up PyLint
         self.builder = gtk.Builder()
+        self.data = None
         self.toggle_map = {}
         self.lgd_conf = None
-        self.data = None
+        self.term = None
 
     def _init_gui(self):
         """Parts of __init__ that should only run in the single instance."""
@@ -132,6 +134,9 @@ class Application(dbus.service.Object):
         tgt_path = subprocess.check_output(
             ["xdg-user-dir", "DOWNLOAD"]).strip()
         self.builder.get_object('btn_target').set_filename(tgt_path)
+
+        tview = self.builder.get_object("view_dlqueue")
+        tview.get_selection().set_mode(gtk.SELECTION_MULTIPLE)
 
         # VTE widgets aren't offered by Glade
         self.data = self.builder.get_object('store_dlqueue')
@@ -164,9 +169,11 @@ class Application(dbus.service.Object):
 
     @dbus.service.method(SVC_NAME, in_signature='', out_signature='b')
     def is_running(self):
+        """D-Bus method required to implement startup notification."""
         return self.running
 
     def enqueue_uris(self, arguments):
+        """Code common to launch and raise sides of single instancing."""
         platforms = self.lgd_conf.get('platform', PLAT_DEF)
 
         for arg in arguments:
@@ -184,11 +191,12 @@ class Application(dbus.service.Object):
         path_last = self.data.get_path(iter_last)
         self.builder.get_object('view_dlqueue').scroll_to_cell(path_last)
 
-    def gtk_main_quit(self, widget, event):
+    def gtk_main_quit(self, widget, event):  # pylint: disable=R0201,W0613
         """Helper for Builder.connect_signals"""
         gtk.main_quit()
 
     def next_download(self):
+        """Common code for the Save button and lgogdownloader exit handler"""
         no_subdirs = self.lgd_conf.get('no-subdirectories', False)
         subdir_game = self.lgd_conf.get('subdir-game', SUBDIR_GAME)
         subdir_extras = self.lgd_conf.get('subdir-extras', SUBDIR_EXTRAS)
@@ -207,6 +215,8 @@ class Application(dbus.service.Object):
             cwd = self.builder.get_object('btn_target').get_filename()
             cmd = ['lgogdownloader']
             if is_inst:
+                self.term.feed("\n** Downloading: %s\r\n" % game_id)
+                self.term.feed("   Target directory: %s\r\n" % cwd)
                 cmd.extend(['--platform',
                            str((win * PLAT_WIN) +
                                (lin * PLAT_LIN) +
@@ -220,6 +230,9 @@ class Application(dbus.service.Object):
                     if not os.path.exists(cwd):
                         os.makedirs(cwd)
                 path = "%s/%s" % (game_id, file_id)
+                self.term.feed("\n** Downloading: %s\r\n" % path)
+                self.term.feed("   Target Directory: %s\r\n" %
+                               os.path.join(cwd, "."))
                 cmd.extend(['--download-file', path])
 
             self.term.fork_command(cmd[0], cmd, None, cwd)
@@ -227,7 +240,7 @@ class Application(dbus.service.Object):
             self.term.feed("\r\n** Done. (Queue emptied)")
             self.builder.get_object('btn_go').set_sensitive(True)
 
-    def on_btn_go_clicked(self, widget, event=None):
+    def on_btn_go_clicked(self, widget, event=None):  # pylint: disable=W0613
         """Callback for the 'Save' button"""
         widget.set_sensitive(False)
         nbook = self.builder.get_object('nbook_main')
@@ -257,35 +270,38 @@ class Application(dbus.service.Object):
             if path:
                 self.data.remove(self.data.get_iter(path))
 
-    def on_view_dlqueue_button_press_event(self, widget, event=None):
+    # pylint: disable=unused-argument,invalid-name
+    def on_view_dlqueue_button_press_event(self, widget, event):
         """Right-click and Menu button handler for the TreeView.
 
         Source: http://faq.pygtk.org/index.py?req=show&file=faq13.017.htp
         """
         treeview = self.builder.get_object('view_dlqueue')
         if event and event.button == 3:
-                btn = event.button
-                x, y, time = int(event.x), int(event.y), event.time
+            btn = event.button
+            x, y, time = int(event.x), int(event.y), event.time
         elif event:
             return None
         elif not event:  # Menu key on the keyboard
-                cursor = treeview.get_cursor()
-                if not cursor[0]:
-                    return None
+            cursor = treeview.get_cursor()
+            if not cursor[0]:
+                return None
 
-                x, y, _, _ = treeview.get_cell_area(*cursor)
-                btn, time = 3, 0
+            x, y, _, _ = treeview.get_cell_area(*cursor)
+            btn, time = 3, 0
 
         pthinfo = treeview.get_path_at_pos(x, y)
         if pthinfo is not None:
-            path, col, cellx, celly = pthinfo
+            path, col, _, _ = pthinfo
             treeview.grab_focus()
-            treeview.set_cursor( path, col, 0)
+            treeview.set_cursor(path, col, 0)
         self.builder.get_object("popup_dlqueue").popup(
             None, None, None, btn, time)
         return True
 
+    # pylint: disable=no-self-use
     def on_view_dlqueue_scroll_event(self, widget, event):
+        """Generic handler to enable the scroll-wheel in a TreeView"""
         adj = widget.get_vadjustment()
         cur, incr = adj.get_value(), adj.get_page_increment() / 2.0
         if event.direction == gtk.gdk.SCROLL_UP:
@@ -295,14 +311,14 @@ class Application(dbus.service.Object):
                 cur + incr, adj.get_upper() - adj.get_page_increment()))
 
     def on_dlqueue_delete_activate(self, widget):
+        """Handler to allow TreeView entry deletion"""
         path = self.builder.get_object('view_dlqueue').get_cursor()[0]
         if path:
             self.data.remove(self.data.get_iter(path))
 
     @dbus.service.method(SVC_NAME, in_signature='a{sv}asi', out_signature='')
     def start(self, options, arguments, timestamp):
-        import os
-
+        """The part of main() which should run in the single instance"""
         if self.is_running():
             self.enqueue_uris(arguments)
             self.builder.get_object('mainwin').present_with_time(timestamp)
