@@ -56,7 +56,7 @@ except ImportError:
 # Try to get the version from the program itself
 # TODO: Decide on a more proper way to dedupe the version number
 try:
-    from lgogd_uri import __version__ as version
+    from lgogd_uri.main import __version__ as version
 except BaseException:
     version = None
 
