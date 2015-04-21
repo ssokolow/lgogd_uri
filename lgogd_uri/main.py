@@ -145,7 +145,7 @@ def parse_uri(uri):
 
 # ---=== Begin Application Class ===---
 
-class Application(dbus.service.Object):  # pylint: disable=missing-docstring
+class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
     def __init__(self, bus, path, name):
         dbus.service.Object.__init__(self, bus, path, name)
         self.running = False
@@ -323,6 +323,7 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         widget.set_sensitive(False)
 
     def on_btn_target_file_set(self, widget):
+        """Handler to persist changes to the target directory"""
         try:
             with open(self.save_dir_store, 'w') as fobj:
                 fobj.write(widget.get_filename())
@@ -341,6 +342,7 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
             widget.feed("\r\n-- DOWNLOAD FAILED --")
         self.next_download()
 
+    # pylint: disable=no-self-use
     def on_view_dlqueue_key_press_event(self, widget, event):
         """Handler for enabling the Delete key"""
         if (event.type == gtk.gdk.KEY_PRESS and
