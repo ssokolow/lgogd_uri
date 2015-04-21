@@ -2,11 +2,11 @@
 Version=1.0
 Encoding=UTF-8
 Type=Application
-Name=lgogd_url.py
+Name=lgogd_uri
 GenericName=GOG Downloader GUI
 Comment=A simple frontend to allow lgogdownloader to handle gogdownloader:// URIs
 TryExec=lgogd_uri
-Exec=lgogd_uri.py %U
+Exec=lgogd_uri %U
 Terminal=false
 NoDisplay=true
 MimeType=x-scheme-handler/gogdownloader
