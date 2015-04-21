@@ -375,6 +375,9 @@ class Application(dbus.service.Object):  # pylint: disable=missing-docstring
         """The part of main() which should run in the single instance"""
         if self.is_running():
             self.enqueue_uris(arguments)
+            nbook = self.builder.get_object('nbook_main')
+            nbook.set_current_page(nbook.page_num(
+                self.builder.get_object("vbox_queue")))
             self.builder.get_object('mainwin').present_with_time(timestamp)
         else:
             self.running = True

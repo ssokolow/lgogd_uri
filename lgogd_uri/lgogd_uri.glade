@@ -37,7 +37,7 @@
         <property name="can_focus">True</property>
         <property name="show_tabs">False</property>
         <child>
-          <object class="GtkVBox" id="vbox">
+          <object class="GtkVBox" id="vbox_queue">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <child>
@@ -175,9 +175,6 @@
                   </packing>
                 </child>
                 <child>
-                  <placeholder/>
-                </child>
-                <child>
                   <object class="GtkLabel" id="label2">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
@@ -206,6 +203,9 @@
                     <property name="bottom_attach">2</property>
                     <property name="y_options"/>
                   </packing>
+                </child>
+                <child>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
