@@ -44,37 +44,22 @@ save-serials = true
 
 ## Installation
 
-```sh
-# Get the dependencies
-sudo apt-get install python-gtk2 python-dbus python-vte python-notify python-pip
+Just run `sh install.sh` and follow the instructions.
 
-# Unpack and install lgogd_uri
-unzip lgogd_uri-master.zip
-cd lgogd_uri-master
-sudo pip install .    # Or `sudo ./setup.py install` if you don't need to uninstall
+(Running `setup.py` directly cannot install non-PyPI dependencies like PyGTK
+ and also will not register the application as your default handler for
+ `gogdownloader://` URIs.)
 
-# Set it as your default handler for gogdownloader:// URIs
-sudo update-desktop-database
-xdg-mime default lgogd_uri.desktop x-scheme-handler/gogdownloader
-```
+The installation process has been fully automated for users on Debian-based
+distros (eg. Ubuntu, Mint) while users on other distros will be asked to
+manually install a list of dependencies.
 
-This *should* make it work for both Firefox and Chrome, since both listen to
-`xdg-mime default ...` but, depending on your version, you may need to restart
-Firefox to get it to notice.
+At present, only system-wide installation is supported but feel free to
+examine what the script is doing before you run it.
 
-### Debugging:
+### Troubleshooting:
 
-If your browser still doesn't want to handle `gogdownloader://` links...
-
-1. Run `xdg-open gogdownloader://ultima_4/installer_win_en` in a terminal.
-   If that works, then your browser isn't obeying system defaults properly
-   and your best bet is googling for questions about how to make BitTorrent
-   magnet links work properly. (They use the same mechanism but are **much**
-   more popular.)
-2. Run `lgogd_uri gogdownloader://ultima_4/installer_win_en` in a terminal.
-   If that works, but `xdg-open` doesn't, then it's installed but either the
-   `lgogd_uri.desktop` file wasn't installed in the right place or the
-   "Set it as your default handler" step failed.
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
 
 ## Uninstallation
 
