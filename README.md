@@ -44,7 +44,8 @@ save-serials = true
 
 ## Installation
 
-Just run `sh install.sh` and follow the instructions.
+Just run `sh install.sh` and follow the instructions. (Depending on your
+desktop environment, you may also be able to just double-click `install.sh`)
 
 (Running `setup.py` directly cannot install non-PyPI dependencies like PyGTK
  and also will not register the application as your default handler for

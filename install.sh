@@ -22,6 +22,11 @@ is_installed() { type "$1" 1>/dev/null 2>&1; return $?; }
 # TODO: Also resolve symlinks just to play it safe
 cd "$(dirname "$0")"
 
+# Check if we were double-clicked and re-run self in a terminal
+if [ ! -t 0 ]; then
+    exec xterm -hold -e "$0" "$@"
+fi
+
 is_installed sudo || die "This script requires sudo to elevate privileges."
 
 if is_installed apt-get; then
