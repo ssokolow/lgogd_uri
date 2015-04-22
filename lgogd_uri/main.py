@@ -92,10 +92,7 @@ except ImportError:
 try:
     import vte
 except ImportError:
-    gtk.MessageDialog(None, gtk.DIALOG_MODAL,
-                      gtk.MESSAGE_ERROR, gtk.BUTTONS_OK,
-                      "Missing python-vte! Exiting.")
-    sys.exit(1)
+    vte = None
 
 # ---=== Begin Functions ===---
 
@@ -160,8 +157,21 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
         self.save_dir_store = os.path.expanduser(
             os.path.join(GOGD_URI_CFG_PATH, 'save_dir'))
 
+    def _check_deps(self):
+        """Return a message describing missing dependencies or C{None}."""
+        if not vte:
+            return "Missing python-vte! Exiting."
     def _init_gui(self):
         """Parts of __init__ that should only run in the single instance."""
+        # Check for some deps late enough to display a GUI error message
+        dep_err = self._check_deps()
+        if dep_err:
+            dlg = gtk.MessageDialog(None, gtk.DIALOG_MODAL,
+                                    gtk.MESSAGE_ERROR, gtk.BUTTONS_OK, dep_err)
+            dlg.set_title("GOG Downloader")
+            dlg.run()
+            sys.exit(1)
+
         self.gtkbuilder_load('lgogd_uri.glade')
         self.data = self.builder.get_object('store_dlqueue')
 
