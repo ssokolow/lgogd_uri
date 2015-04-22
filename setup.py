@@ -66,7 +66,7 @@ setup(
     description="Frontend to enable gogdownloader:// URLs in lgogdownloader",
     author="Stephan Sokolow (detarion/SSokolow)",
     author_email="http://www.ssokolow.com/ContactMe",
-    # url = "http://ssokolow.github.com/lgogd_uri/",
+    url = "https://github.com/ssokolow/lgogd_uri",
 
     license="License :: OSI Approved :: MIT License",
     # TODO: Trove Classifiers
