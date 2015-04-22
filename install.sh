@@ -27,6 +27,7 @@ if [ ! -t 0 ]; then
     exec xterm -hold -e "$0" "$@"
 fi
 
+is_installed lgogdownloader || die "lgogd_uri requires lgogdownloader but it isn't in your \$PATH. Please correct the problem and re-run install.sh."
 is_installed sudo || die "This script requires sudo to elevate privileges."
 
 if is_installed apt-get; then

@@ -140,6 +140,23 @@ def parse_uri(uri):
         results.append(tuple(filepath.split('/', 1)))
     return results
 
+def which(execname, execpath=None):
+    """Like the UNIX which command, this function attempts to find the given
+    executable in the system's search path. Returns C{None} if it cannot find
+    anything.
+    """
+
+    if isinstance(execpath, basestring):
+        execpath = execpath.split(os.pathsep)
+    elif not execpath:
+        execpath = os.environ.get('PATH', os.defpath).split(os.pathsep)
+
+    for path in execpath:
+        fullpath = os.path.join(os.path.expanduser(path), execname)
+        if os.path.exists(fullpath):
+            return fullpath
+    return None  # Couldn't find anything.
+
 # ---=== Begin Application Class ===---
 
 class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
@@ -161,6 +178,9 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
         """Return a message describing missing dependencies or C{None}."""
         if not vte:
             return "Missing python-vte! Exiting."
+        if not which("lgogdownloader"):
+            return "Cannot find lgogdownloader in $PATH! Exiting."
+
     def _init_gui(self):
         """Parts of __init__ that should only run in the single instance."""
         # Check for some deps late enough to display a GUI error message
