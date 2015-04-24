@@ -63,14 +63,26 @@ except BaseException:
 setup(
     name="lgogd_uri",
     version=version,
-    description="Frontend to enable gogdownloader:// URLs in lgogdownloader",
     author="Stephan Sokolow (detarion/SSokolow)",
     author_email="http://www.ssokolow.com/ContactMe",
+    description="Frontend to enable gogdownloader:// URLs in lgogdownloader",
+    # TODO: long_description
     url = "https://github.com/ssokolow/lgogd_uri",
 
-    license="License :: OSI Approved :: MIT License",
-    # TODO: Trove Classifiers
+    classifiers=[
+        "Development Status :: 4 - Beta",
+        "Environment :: X11 Applications :: GTK",
+        "Intended Audience :: End Users/Desktop",
+        "License :: OSI Approved :: MIT License",
+        "Natural Language :: English",
+        "Operating System :: POSIX",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 2.7",
+        "Topic :: Internet",
+    ],
     install_requires=REQUIRES,
+    keywords="gog lgogdownloader gui gtk downloadmanager download_manager",
+    license="MIT",
 
     packages=['lgogd_uri'],
     package_data={'lgogd_uri': ['*.glade', '*.png']},
