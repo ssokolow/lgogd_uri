@@ -6,6 +6,9 @@
    always install the requisite metadata for normal detection.
 """
 
+__author__ = "Stephan Sokolow (deitarion/SSokolow)"
+__license__ = "MIT"
+
 try:
     from setuptools import setup
 except ImportError:
@@ -67,7 +70,7 @@ setup(
     author_email="http://www.ssokolow.com/ContactMe",
     description="Frontend to enable gogdownloader:// URLs in lgogdownloader",
     # TODO: long_description
-    url = "https://github.com/ssokolow/lgogd_uri",
+    url="https://github.com/ssokolow/lgogd_uri",
 
     classifiers=[
         "Development Status :: 4 - Beta",
