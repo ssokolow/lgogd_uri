@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-@todo:
- - Figure out how to properly handle install_requires for things which don't
-   always install the requisite metadata for normal detection.
-"""
+"""Best attempt at a robust setup.py for a PyGTK app"""
 
 __author__ = "Stephan Sokolow (deitarion/SSokolow)"
 __license__ = "MIT"
 
-import io, os, re
+import io, os, re, sys
 
 try:
     from setuptools import setup
@@ -20,43 +16,41 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
 
+# Requirements adapter for packages which may not be PyPI-installable
 REQUIRES = []
 
-# Detect PyGTK without requiring egg metadata
-try:
-    # pylint: disable=unused-import
-    import gobject  # NOQA
-except ImportError:
-    REQUIRES.append('pygtk')
+def test_for_imports(choices, package_name, human_package_name):
+    """Detect packages without requiring egg metadata
 
-# Detect dbus-python without requiring egg metadata
-try:
-    # pylint: disable=unused-import
-    import dbus  # NOQA
-except ImportError:
-    REQUIRES.append('dbus-python')
+    Fallback to either adding an install_requires entry or exiting with
+    an error message.
+    """
+    if os.environ.get("IS_BUILDING_PACKAGE", None):
+        return  # Allow packaging without runtime-only deps installed
 
-# Detect PyNotify without requiring egg metadata and support notify2 as well
-try:
-    # pylint: disable=unused-import
-    import notify2  # NOQA
-except ImportError:
-    try:
-        # pylint: disable=unused-import
-        import pynotify  # NOQA
-    except ImportError:
-        REQUIRES.append('notify2')
+    if isinstance(choices, basestring):
+        choices = [choices]
 
-# Detect VTE without requiring egg metadata
-try:
-    # pylint: disable=unused-import
-    import vte  # NOQA
-except ImportError:
-    print("Your system lacks the Python bindings for libvte (python-vte) "
-          "but they cannot be automatically installed by this script. "
-          "Aborting.")
-    import sys
-    sys.exit(1)
+    while choices:
+        # Detect PyGTK without requiring egg metadata
+        try:
+            current = choices.pop(0)
+            __import__(current)
+        except ImportError:
+            if choices:  # Allow a fallback chain
+                continue
+
+            if package_name:
+                REQUIRES.append(package_name)
+            else:
+                print("Could not import '%s'. Please make sure you have %s "
+                      "installed." % (current, human_package_name))
+                sys.exit(1)
+
+test_for_imports("gtk", "pygtk", "PyGTK")
+test_for_imports("dbus", "dbus-python", "python-dbus")
+test_for_imports(["notify2", "pynotify"], "notify2", "pynotify or notify2")
+test_for_imports("vte", None, "python-vte")
 
 # Get the version from the program rather than duplicating it here
 # Source: https://packaging.python.org/en/latest/single_source_version.html
