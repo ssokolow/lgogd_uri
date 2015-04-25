@@ -235,6 +235,10 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
         mainwin.set_title('%s %s' % (mainwin.get_title(), __version__))
         mainwin.show_all()
 
+        # Fix for libvte resize bug
+        # See https://github.com/ssokolow/lgogd_uri/issues/4
+        self.term.set_size_request(0, 0)
+
     def gtkbuilder_load(self, path):
         """Wrapper to work around the brokenness of
         GtkCellRendererToggle.set_active() and the inability to retrieve
