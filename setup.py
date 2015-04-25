@@ -75,7 +75,7 @@ setup(
     author="Stephan Sokolow (detarion/SSokolow)",
     author_email="http://www.ssokolow.com/ContactMe",
     description="Frontend to enable gogdownloader:// URLs in lgogdownloader",
-    # TODO: long_description
+    long_description=read("README.rst"),
     url="https://github.com/ssokolow/lgogd_uri",
 
     classifiers=[
