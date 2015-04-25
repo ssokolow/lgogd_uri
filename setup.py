@@ -9,6 +9,8 @@
 __author__ = "Stephan Sokolow (deitarion/SSokolow)"
 __license__ = "MIT"
 
+import io, os, re
+
 try:
     from setuptools import setup
 except ImportError:
@@ -56,16 +58,26 @@ except ImportError:
     import sys
     sys.exit(1)
 
-# Try to get the version from the program itself
-# TODO: Decide on a more proper way to dedupe the version number
-try:
-    from lgogd_uri.main import __version__ as version
-except BaseException:
-    version = None
+# Get the version from the program rather than duplicating it here
+# Source: https://packaging.python.org/en/latest/single_source_version.html
+def read(*names, **kwargs):
+    """Convenience wrapper for read()ing a file"""
+    with io.open(os.path.join(os.path.dirname(__file__), *names),
+              encoding=kwargs.get("encoding", "utf8")) as fobj:
+        return fobj.read()
+
+def find_version(*file_paths):
+    """Extract the value of __version__ from the given file"""
+    version_file = read(*file_paths)
+    version_match = re.search(r"^__version__\s*=\s*['\"]([^'\"]*)['\"]",
+                              version_file, re.M)
+    if version_match:
+        return version_match.group(1)
+    raise RuntimeError("Unable to find version string.")
 
 setup(
     name="lgogd_uri",
-    version=version,
+    version=find_version("lgogd_uri", "main.py"),
     author="Stephan Sokolow (detarion/SSokolow)",
     author_email="http://www.ssokolow.com/ContactMe",
     description="Frontend to enable gogdownloader:// URLs in lgogdownloader",
