@@ -50,16 +50,16 @@ Features
   .. image:: img/sshot_tabs.png
      :alt: tabs screenshot
 
----------------
+------------
 Installation
----------------
+------------
 
 Just run ``sh install.sh`` and follow the instructions. (Depending on your
 desktop environment, you may also be able to just double-click ``install.sh``)
 
 (Running ``setup.py`` directly cannot install non-PyPI dependencies like PyGTK
- and also will not register the application as your default handler for
- ``gogdownloader://`` URIs.)
+and also will not register the application as your default handler for
+``gogdownloader://`` URIs.)
 
 The installation process has been fully automated for users on Debian-based
 distros (eg. Ubuntu, Mint) while users on other distros will be asked to

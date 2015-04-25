@@ -174,7 +174,7 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
         self.save_dir_store = os.path.expanduser(
             os.path.join(GOGD_URI_CFG_PATH, 'save_dir'))
 
-    def _check_deps(self):
+    def _check_deps(self):  # pylint: disable=no-self-use
         """Return a message describing missing dependencies or C{None}."""
         if not vte:
             return "Missing python-vte! Exiting."
