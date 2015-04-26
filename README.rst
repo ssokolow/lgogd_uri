@@ -1,6 +1,15 @@
 .. image:: https://landscape.io/github/ssokolow/lgogd_uri/master/landscape.svg?style=flat
    :target: https://landscape.io/github/ssokolow/lgogd_uri/master
    :alt: Code Health
+.. image:: https://codeclimate.com/github/ssokolow/lgogd_uri/badges/gpa.svg
+   :target: https://codeclimate.com/github/ssokolow/lgogd_uri
+   :alt: Code Climate
+.. image:: https://scrutinizer-ci.com/g/ssokolow/lgogd_uri/badges/quality-score.png?b=master
+   :target: https://scrutinizer-ci.com/g/ssokolow/lgogd_uri/?branch=master
+   :alt: Scrutinizer Code Quality
+.. image:: https://www.codacy.com/project/badge/09670e4eac6c4ad1852d0fe5a4f8884e
+   :target: https://www.codacy.com/app/from_github/lgogd_uri
+   :alt: Codacy Badge
 
 A simple GTK+ frontend for `LGOGDownloader`_
 to enable support for the convenient ``gogdownloader://`` URIs that
