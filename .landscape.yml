@@ -1,0 +1,12 @@
+ignore-paths:
+    - ez_setup.py
+    - lgogd_uri/gtkexcepthook.py
+pylint:
+    disable:
+        # PyLint is buggy, so let Flake8 handle this
+        - bad-continuation
+        # FIXME: Prospector won't let me disable these spurious warnings inline
+        # OR here. This is just a reminder for humans
+        - pointless-except
+        - interface-not-implemented
+        - useless-suppression
