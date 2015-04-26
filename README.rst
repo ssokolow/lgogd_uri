@@ -1,3 +1,7 @@
+.. image:: https://landscape.io/github/ssokolow/lgogd_uri/master/landscape.svg?style=flat
+   :target: https://landscape.io/github/ssokolow/lgogd_uri/master
+   :alt: Code Health
+
 A simple GTK+ frontend for `LGOGDownloader`_
 to enable support for the convenient ``gogdownloader://`` URIs that
 `GOG.com`_ offers.
