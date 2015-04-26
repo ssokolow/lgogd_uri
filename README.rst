@@ -10,6 +10,13 @@
 .. image:: https://www.codacy.com/project/badge/09670e4eac6c4ad1852d0fe5a4f8884e
    :target: https://www.codacy.com/app/from_github/lgogd_uri
    :alt: Codacy Badge
+.. image:: https://img.shields.io/badge/license-MIT-blue.svg
+   :alt: MIT License
+   :target: https://raw.githubusercontent.com/ssokolow/lgogd_uri/master/LICENSE
+.. image:: https://badge.waffle.io/ssokolow/lgogd_uri.png?label=ready&title=Ready
+   :target: https://waffle.io/ssokolow/lgogd_uri
+   :alt: Contributor-friendly TODOs
+   :align: right
 
 A simple GTK+ frontend for `LGOGDownloader`_
 to enable support for the convenient ``gogdownloader://`` URIs that
