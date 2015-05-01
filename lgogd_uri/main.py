@@ -33,7 +33,7 @@ from __future__ import (absolute_import, division, print_function,
 
 __author__ = "Stephan Sokolow (deitarion/SSokolow)"
 __appname__ = "URI handler for lgogdownloader"
-__version__ = "0.1rc5"
+__version__ = "0.1rc6"
 __license__ = "MIT"
 
 SVC_NAME = "com.ssokolow.lgogd_uri"
@@ -426,14 +426,15 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
             if cursor[0] is None:
                 return None
 
-            x, y, _, _ = treeview.get_cell_area(*cursor)
-            btn, time = 3, 0
+        # Code to handle right-clicking on a non-selected entry
+        # Source: http://www.daa.com.au/pipermail/pygtk/2005-June/010465.html
+        path = treeview.get_path_at_pos(int(event.x), int(event.y))
+        selection = treeview.get_selection()
+        rows = selection.get_selected_rows()
+        if path[0] not in rows[1]:
+            selection.unselect_all()
+            selection.select_path(path[0])
 
-        pthinfo = treeview.get_path_at_pos(x, y)
-        if pthinfo is not None:
-            path, col, _, _ = pthinfo
-            treeview.grab_focus()
-            treeview.set_cursor(path, col, 0)
         self.builder.get_object("popup_dlqueue").popup(
             None, None, None, btn, time)
         return True
@@ -449,11 +450,13 @@ class Application(dbus.service.Object):  # pylint: disable=C0111,R0902
             adj.set_value(min(
                 cur + incr, adj.get_upper() - adj.get_page_increment()))
 
-    def on_dlqueue_delete_activate(self, widget):
+    def on_dlqueue_delete_activate(self, _):
         """Handler to allow TreeView entry deletion"""
-        path = self.builder.get_object('view_dlqueue').get_cursor()[0]
-        if path:
-            self.data.remove(self.data.get_iter(path))
+        widget = self.builder.get_object('view_dlqueue')
+        model, rows = widget.get_selection().get_selected_rows()
+        rows = [gtk.TreeRowReference(model, x) for x in rows]
+        for ref in rows:
+            model.remove(model.get_iter(ref.get_path()))
 
     @dbus.service.method(SVC_NAME, in_signature='a{sv}asi', out_signature='')
     def start(self, options, arguments, timestamp):

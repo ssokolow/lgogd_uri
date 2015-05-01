@@ -108,8 +108,7 @@ Known Shortcomings
   being ignored in favour of the ``language`` option in lgogdownloader's
   ``config.cfg``
 * Multi-selection doesn't get along with ``GtkTreeView``'s built-in
-  drag-and-drop reordering and context-menu support. (Use the Delete key for
-  batch deletion)
+  drag-and-drop reordering.
 * Remembering un-finished downloads across a restart is still on the TODO list.
 * Currently, no attempt is made to retrieve game metadata, so the "Game" and
   "File ID" columns don't give the nice, pretty output the official GOG
