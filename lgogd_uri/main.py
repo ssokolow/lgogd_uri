@@ -33,7 +33,7 @@ from __future__ import (absolute_import, division, print_function,
 
 __author__ = "Stephan Sokolow (deitarion/SSokolow)"
 __appname__ = "URI handler for lgogdownloader"
-__version__ = "0.1"
+__version__ = "0.1.0.1"
 __license__ = "MIT"
 
 SVC_NAME = "com.ssokolow.lgogd_uri"
